@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Assembly mTLS POC</title>
+  <script src="wasm_exec.js"></script> <!-- Load the Go wasm support library -->
+  <script>
+      const go = new Go(); // Instantiate the Go instance
+      let mod, inst;
+      WebAssembly.instantiateStreaming(fetch("myapp.wasm"), go.importObject).then(async (result) => {
+          mod = result.module;
+          inst = result.instance;
+          await go.run(inst); // Run the wasm instance
+      });
+  </script>
+</head>
+<body>
+<h1>Web Assembly mTLS POC</h1>
+<pre id="output"></pre> <!-- Output will be displayed here -->
+</body>
+</html>

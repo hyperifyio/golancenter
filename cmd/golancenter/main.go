@@ -26,14 +26,21 @@ func main() {
 
 	hostname := "localhost"
 	port := "8080"
-	url := fmt.Sprintf("http://%s:%s", hostname, port)
-	listenAddr := fmt.Sprintf("%s:%s", hostname, port)
-	vncUrl := fmt.Sprintf("%s/vnc.html?host=%s&port=%s&encrypt=0", url, hostname, port)
 
-	http.HandleFunc("/websockify", proxyHandler)
+	listenAddr := fmt.Sprintf("%s:%s", hostname, port)
+
+	listenUrl := fmt.Sprintf("http://%s:%s", hostname, port)
+
+	// viewUrl := fmt.Sprintf("%s/vnc.html?host=%s&port=%s&encrypt=0", listenUrl, hostname, port)
+
+	viewUrl := fmt.Sprintf("%s/index.html", listenUrl)
+
+	http.HandleFunc("/ws", netConnHandler())
+	// http.HandleFunc("/websockify", tcpProxyHandler)
+
 	http.Handle("/", http.FileServer(http.FS(contentFS)))
 
-	log.Printf("Listening on %s...", url)
+	log.Printf("Listening on %s...", listenUrl)
 	go func() {
 		err = http.ListenAndServe(listenAddr, nil)
 		if err != nil {
@@ -46,7 +53,9 @@ func main() {
 	defer w.Destroy()
 	w.SetTitle("lan.center")
 	w.SetSize(800, 600, webview.HintNone)
-	w.Navigate(vncUrl)
+	w.Navigate(viewUrl)
+	// w.Navigate("data:text/html," + url.PathEscape(htmlContent))
+
 	w.Run()
 
 }

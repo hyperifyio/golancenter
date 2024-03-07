@@ -20,9 +20,9 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// proxyHandler handles incoming WebSocket connections, upgrading them and then
+// tcpProxyHandler handles incoming WebSocket connections, upgrading them and then
 // forwarding the connection to the VNC server.
-func proxyHandler(w http.ResponseWriter, r *http.Request) {
+func tcpProxyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Upgrade the HTTP server connection to a WebSocket connection
 	wsConn, err := upgrader.Upgrade(w, r, nil)

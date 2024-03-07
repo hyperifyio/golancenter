@@ -13,7 +13,7 @@ golancenter: ./cmd/golancenter/main.go wasm
 wasm: ./misc/wasm/main.go
 	mkdir -p ./cmd/golancenter/web/
 	cp $(WASM_EXEC_JS) ./cmd/golancenter/web/
-	GOOS=js GOARCH=wasm go build -o ./cmd/golancenter/web/myapp.wasm ./misc/wasm/main.go
+	GOOS=js GOARCH=wasm go build -o ./cmd/golancenter/web/myapp.wasm ./misc/wasm/main.go ./misc/wasm/conn.go
 
 # Target for running the golancenter
 run: golancenter

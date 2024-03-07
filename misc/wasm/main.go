@@ -1,57 +1,70 @@
+// Copyright (c) 2024. Heusala Group Oy <info@heusalagroup.fi>. All rights reserved.
 //go:build js && wasm
 // +build js,wasm
 
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
-	"syscall/js"
+	"context"
+	"crypto/tls"
+	"net"
+	"net/http"
 )
 
-func generateCSR() ([]byte, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return nil, err
-	}
-
-	subject := pkix.Name{
-		CommonName:         "www.example.com",
-		Country:            []string{"US"},
-		Province:           []string{""},
-		Locality:           []string{""},
-		Organization:       []string{"Example Co"},
-		OrganizationalUnit: []string{"IT"},
-	}
-
-	template := x509.CertificateRequest{
-		Subject:            subject,
-		SignatureAlgorithm: x509.SHA256WithRSA,
-	}
-
-	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	csrPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
-	return csrPEM, nil
-}
-
-func generateCSRWrapper() func(js.Value, []js.Value) interface{} {
-	return func(js.Value, []js.Value) interface{} {
-		csr, err := generateCSR()
-		if err != nil {
-			return err.Error()
-		}
-		return string(csr)
-	}
-}
-
 func main() {
-	js.Global().Set("generateCSR", js.FuncOf(generateCSRWrapper()))
-	<-make(chan bool)
+
+	// js.Global().Set("generateCSR", js.FuncOf(generateCSRWrapper()))
+	// <-make(chan bool)
+
+	c := make(chan struct{}, 0)
+
+	println("WASM WebSocket Client Starting...")
+	// document := js.Global().Get("document")
+
+	tlsConfig := &tls.Config{}
+
+	client := NewClient("ws://localhost:8080/ws", tlsConfig)
+
+	// Use the client as needed...
+	resp, err := client.Get("https://www.sendanor.fi/api")
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	<-c
 }
+
+func NewClient(
+	wsAddr string,
+	tlsConfig *tls.Config,
+) *http.Client {
+	client := &http.Client{
+		Transport: &http.Transport{
+
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return NewConn(ctx, wsAddr, network, addr)
+			},
+
+			DialTLSContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				conn, err := NewConn(ctx, wsAddr, network, addr)
+				if err != nil {
+					return nil, err
+				}
+				tlsConn := tls.Client(conn, tlsConfig)
+				return tlsConn, nil
+			},
+		},
+	}
+	return client
+}
+
+// func generateCSRWrapper() func(js.Value, []js.Value) interface{} {
+// 	return func(js.Value, []js.Value) interface{} {
+// 		csr, err := generateCSR()
+// 		if err != nil {
+// 			return err.Error()
+// 		}
+// 		return string(csr)
+// 	}
+// }
