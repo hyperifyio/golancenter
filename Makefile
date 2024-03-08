@@ -2,22 +2,24 @@
 # Path to the Go WebAssembly JS support file
 WASM_EXEC_JS := $(shell go env GOROOT)/misc/wasm/wasm_exec.js
 
+.PHONY: certs
+
 # Default target executed when no arguments are given to make.
 default: golancenter testserver wasm
 
 # Target for building the server
-golancenter: ./cmd/golancenter/main.go wasm
+golancenter: ./cmd/golancenter/main.go wasm certs
 	go build -o golancenter ./cmd/golancenter
 
 # Target for building the mtls test server
-testserver: ./cmd/testserver/main.go
+testserver: ./cmd/testserver/main.go certs
 	go build -o testserver ./cmd/testserver
 
 certs:
 	make -C certs certs
 
 # Target for building the WebAssembly module (replace with your actual build command)
-wasm: ./misc/wasm/main.go
+wasm: ./misc/wasm/main.go certs
 	mkdir -p ./misc/wasm/certs/
 	cp ./certs/root-ca-cert.pem ./misc/wasm/certs/root-ca-cert.pem
 	cp ./certs/client-ca-cert.pem ./misc/wasm/certs/client-ca-cert.pem

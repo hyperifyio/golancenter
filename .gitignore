@@ -2,6 +2,11 @@
 /cmd/golancenter/web/myapp.wasm
 /cmd/golancenter/web/wasm_exec.js
 /golancenter
+/testserver
+/certs/*.pem
+/certs/*.srl
+/cmd/golancenter/web/*.pem
+/misc/wasm/certs/*.pem
 
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
