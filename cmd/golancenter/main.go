@@ -12,35 +12,31 @@ import (
 	"github.com/webview/webview_go"
 )
 
-//go:embed novnc/vnc.html novnc/package.json novnc/app/* novnc/core/* novnc/vendor/*
+//go:embed web/*
 var webContent embed.FS
 
 func main() {
 
-	// Create an http.FileSystem from the embedded files.
-	// The "web" subdirectory becomes the root of this file system.
-	contentFS, err := fs.Sub(webContent, "novnc")
+	// Local HTTP server acting as a proxy for outside world connections
+	//
+	// These websocket connections will be encrypted by TLS, so HTTP is suitable,
+	// although in a production version we should verify only verified users
+	// can access it. (Encrypting it though is not necessary, since it would be
+	// double encrypted then and bad for performance.) Signed JWT might do the
+	// trick.
+	hostname := "localhost"
+	port := "8080"
+	listenAddr := fmt.Sprintf("%s:%s", hostname, port)
+
+	contentFS, err := fs.Sub(webContent, "web")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	hostname := "localhost"
-	port := "8080"
-
-	listenAddr := fmt.Sprintf("%s:%s", hostname, port)
-
-	listenUrl := fmt.Sprintf("http://%s:%s", hostname, port)
-
-	// viewUrl := fmt.Sprintf("%s/vnc.html?host=%s&port=%s&encrypt=0", listenUrl, hostname, port)
-
-	viewUrl := fmt.Sprintf("%s/index.html", listenUrl)
-
 	http.HandleFunc("/ws", netConnHandler())
-	// http.HandleFunc("/websockify", tcpProxyHandler)
-
 	http.Handle("/", http.FileServer(http.FS(contentFS)))
 
-	log.Printf("Listening on %s...", listenUrl)
+	log.Printf("Listening on %s...", listenAddr)
 	go func() {
 		err = http.ListenAndServe(listenAddr, nil)
 		if err != nil {
@@ -48,14 +44,14 @@ func main() {
 		}
 	}()
 
-	// Open a webview window
+	// Open a webview window which starts a mTLS request to outside world
+	listenUrl := fmt.Sprintf("http://%s:%s", hostname, port)
+	viewUrl := fmt.Sprintf("%s/index.html", listenUrl)
 	w := webview.New(true)
 	defer w.Destroy()
 	w.SetTitle("lan.center")
 	w.SetSize(800, 600, webview.HintNone)
 	w.Navigate(viewUrl)
-	// w.Navigate("data:text/html," + url.PathEscape(htmlContent))
-
 	w.Run()
 
 }
