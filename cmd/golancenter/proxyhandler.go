@@ -18,9 +18,9 @@ var upgrader = websocket.Upgrader{
 
 func sshDial() (*ssh.Session, error) {
     config := &ssh.ClientConfig{
-        User: "Seeti Oinonen", // username
+        User: "placeholder", // username
         Auth: []ssh.AuthMethod{
-            ssh.Password("seesti200"), // password
+            ssh.Password("placeholder"), // password
         },
         HostKeyCallback: ssh.InsecureIgnoreHostKey(), // For testing purposes only
     }
