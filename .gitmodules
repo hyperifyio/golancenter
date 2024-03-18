@@ -1,3 +1,0 @@
-[submodule "cmd/golancenter/novnc"]
-	path = cmd/golancenter/novnc
-	url = https://github.com/novnc/noVNC.git
